@@ -17,7 +17,7 @@
 import Foundation
 
 /// An `AsynSequence` of `Data` buffers read from a spcific ``Source``
-/// 
+///
 public struct AsyncBuffers: AsyncSequence {
 
   public typealias Element = Data
@@ -31,7 +31,8 @@ public struct AsyncBuffers: AsyncSequence {
     public func next() async throws -> Data? {
       if required {
         return try await source.read(next: readSize)
-      } else {
+      }
+      else {
         return try await source.read(max: readSize)
       }
     }
@@ -44,14 +45,14 @@ public struct AsyncBuffers: AsyncSequence {
 
   init(source: Source, maxReadSize: Int) {
     self.source = source
-    self.readSize = maxReadSize
-    self.required = false
+    readSize = maxReadSize
+    required = false
   }
 
   init(source: Source, requiredReadSize: Int) {
     self.source = source
-    self.readSize = requiredReadSize
-    self.required = true
+    readSize = requiredReadSize
+    required = true
   }
 
   public func makeAsyncIterator() -> AsyncIterator {

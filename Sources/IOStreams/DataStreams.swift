@@ -22,7 +22,6 @@ import Foundation
 //  Created by Kevin Wooten on 8/2/22.
 //
 
-import Foundation
 
 public class DataSource: Source {
 
@@ -44,7 +43,7 @@ public class DataSource: Source {
 
     let result = data.prefix(maxLength)
 
-    data.removeSubrange(0..<result.count)
+    data.removeSubrange(0 ..< result.count)
 
     bytesRead += result.count
 

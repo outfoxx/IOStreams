@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import Foundation
 import Compression
+import Foundation
 
 /// Compressing or decompressing ``Sink``
 ///
@@ -28,7 +28,7 @@ public class CompressionFilter: Filter {
   private var output: Data?
 
   /// Initializes the filter with the given `operation` and `algorithm`.
-  /// 
+  ///
   /// - Parameters:
   ///   - operation: Operation to perform on the passed in data.
   ///   - algorithm: Compression algorithm to use.

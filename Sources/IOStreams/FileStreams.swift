@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import Foundation
 import Darwin
+import Foundation
 
 /// ``Source`` that sequentially reads data from a file.
 ///
@@ -28,12 +28,12 @@ public class FileSource: FileStream, Source {
   public func read(max: Int) async throws -> Data? {
     guard !closedState.closed else { throw IOError.streamClosed }
 
-    let data: Data? = try await withCheckedThrowingContinuation { continuation -> Void in
+    let data: Data? = try await withCheckedThrowingContinuation { continuation in
       withUnsafeCurrentTask { task in
 
         var collectedData = Data()
 
-        io.read(offset: 0, length: max, queue: .taskPriority) { (done, data, error) -> Void in
+        io.read(offset: 0, length: max, queue: .taskPriority) { done, data, error in
 
           if task?.isCancelled ?? false {
             continuation.resume(throwing: CancellationError())
@@ -96,7 +96,7 @@ public class FileSink: FileStream, Sink {
 
           let data = DispatchData(bytesNoCopy: dataPtr)
 
-          io.write(offset: 0, data: data, queue: .taskPriority) { done, data, error in
+          io.write(offset: 0, data: data, queue: .taskPriority) { _, _, error in
 
             if task?.isCancelled ?? false {
               continuation.resume(throwing: CancellationError())
@@ -119,7 +119,7 @@ public class FileSink: FileStream, Sink {
       }
     } as Void
 
-    self.bytesWritten = self.bytesWritten + Int(data.count)
+    bytesWritten = bytesWritten + Int(data.count)
   }
 
 }
@@ -131,15 +131,17 @@ public class FileSink: FileStream, Sink {
 ///
 public class FileStream: Stream {
 
-  private static let progressReportLimits = (lowWaterMark: 8 * 1024,
-                                             highWaterMark: 64 * 1024,
-                                             maxInterval: DispatchTimeInterval.microseconds(50))
+  private static let progressReportLimits = (
+    lowWaterMark: 8 * 1024,
+    highWaterMark: 64 * 1024,
+    maxInterval: DispatchTimeInterval.microseconds(50)
+  )
 
   struct CloseState {
     var closed = false
     var error: Error?
   }
-  
+
   fileprivate let fileHandle: FileHandle
   fileprivate var io: DispatchIO!
   fileprivate var closedState = CloseState()
@@ -171,33 +173,34 @@ public class FileStream: Stream {
   public required init(fileHandle: FileHandle) throws {
 
     self.fileHandle = fileHandle
-    self.io = DispatchIO(type: .stream, fileDescriptor: fileHandle.fileDescriptor, queue: .taskPriority) { error in
+    io = DispatchIO(type: .stream, fileDescriptor: fileHandle.fileDescriptor, queue: .taskPriority) { error in
       let closeError: Error?
       if error != 0 {
-        
+
         let errorCode = POSIXError.Code(rawValue: error) ?? .EIO
-        
+
         closeError = IOError.map(error: POSIXError(errorCode))
-      } else {
+      }
+      else {
         closeError = nil
       }
-      
+
       self.close(error: closeError)
     }
 
     // Ensure handlers are called frequently to allow timely cancellation
-    self.io.setLimit(lowWater: Self.progressReportLimits.lowWaterMark)
-    self.io.setLimit(highWater: Self.progressReportLimits.highWaterMark)
-    self.io.setInterval(interval: Self.progressReportLimits.maxInterval, flags: [])
+    io.setLimit(lowWater: Self.progressReportLimits.lowWaterMark)
+    io.setLimit(highWater: Self.progressReportLimits.highWaterMark)
+    io.setInterval(interval: Self.progressReportLimits.maxInterval, flags: [])
   }
-  
+
   fileprivate func close(error: Error?) {
     guard !closedState.closed else { return }
     closedState.closed = true
     closedState.error = error
     io.close(flags: [.stop])
   }
-  
+
   public func close() throws {
     if let error = closedState.error {
       throw error

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import Foundation
 import CryptoKit
+import Foundation
 
 public protocol HashingResult {
 
@@ -40,7 +40,7 @@ public class HashingFilter: Filter, HashingResult {
     case md5
   }
 
-  private struct AnyFunction<HF: HashFunction> : Function {
+  private struct AnyFunction<HF: HashFunction>: Function {
 
     var hashFunction: HF
 
@@ -54,7 +54,7 @@ public class HashingFilter: Filter, HashingResult {
   /// Calculated hash digest
   ///
   /// - Note: Available after calling the ``finish()``, which
-  /// is called when ``FilterSink/close()`` or ``FileSource/close()``
+  /// is called when ``FilterSink/close()`` or ``FilterSource/close()``
   ///
   public private(set) var digest: Data?
 
@@ -66,20 +66,20 @@ public class HashingFilter: Filter, HashingResult {
   public init(algorithm: Algorithm) {
     switch algorithm {
     case .md5:
-      self.function = AnyFunction(hashFunction: Insecure.MD5())
+      function = AnyFunction(hashFunction: Insecure.MD5())
     case .sha1:
-      self.function = AnyFunction(hashFunction: Insecure.SHA1())
+      function = AnyFunction(hashFunction: Insecure.SHA1())
     case .sha256:
-      self.function = AnyFunction(hashFunction: SHA256())
+      function = AnyFunction(hashFunction: SHA256())
     case .sha384:
-      self.function = AnyFunction(hashFunction: SHA384())
+      function = AnyFunction(hashFunction: SHA384())
     case .sha512:
-      self.function = AnyFunction(hashFunction: SHA512())
+      function = AnyFunction(hashFunction: SHA512())
     }
   }
 
   internal init<HF: HashFunction>(_ hashFunction: HF) {
-    self.function = AnyFunction(hashFunction: hashFunction)
+    function = AnyFunction(hashFunction: hashFunction)
   }
 
   /// Updates the hash calculation and returns the

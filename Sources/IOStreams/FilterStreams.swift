@@ -104,7 +104,7 @@ open class FilterSink: Sink {
 
     try await sink.write(data: processedData)
   }
-  
+
   /// Closes the stream after writing any final data to the
   /// destination ``sink``.
   ///
@@ -120,7 +120,7 @@ open class FilterSink: Sink {
       try await sink.write(data: data)
     }
   }
-  
+
 }
 
 public extension Source {

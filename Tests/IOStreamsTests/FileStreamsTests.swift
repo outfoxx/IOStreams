@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import XCTest
 @testable import IOStreams
+import XCTest
 
 final class FileStreamsTests: XCTestCase {
 
@@ -33,6 +33,7 @@ final class FileStreamsTests: XCTestCase {
     try? FileManager.default.removeItem(at: fileURL)
   }
 
+  @available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
   func disabled_testSourceReadsCompletelyUsingBytes() async throws {
 
     let fileSize = 50 * 1024 * 1024
@@ -58,7 +59,7 @@ final class FileStreamsTests: XCTestCase {
 
         stopMeasuring()
 
-        print("Read \(bytesRead) bytes")
+        // print("Read \(bytesRead) bytes")
 
         XCTAssertEqual(bytesRead, fileSize)
 
@@ -88,7 +89,7 @@ final class FileStreamsTests: XCTestCase {
 
         stopMeasuring()
 
-        print("Read \(source.bytesRead) bytes")
+        // print("Read \(source.bytesRead) bytes")
 
         XCTAssertEqual(source.bytesRead, fileSize)
 
@@ -109,7 +110,8 @@ final class FileStreamsTests: XCTestCase {
 
     let reader = Task {
       for try await data in source.buffers(size: 3079) {
-        print("Read \(data.count) bytes of data")
+        _ = data.count
+        // print("Read \(data.count) bytes of data")
       }
     }
 
@@ -117,15 +119,14 @@ final class FileStreamsTests: XCTestCase {
       reader.cancel()
       try await reader.value
     }
-    catch is CancellationError {
-    }
+    catch is CancellationError {}
 
     XCTAssertEqual(source.bytesRead, 0)
   }
 
   func testSourceCancelsAfterStart() async throws {
 
-    let fileSize = 256 * 1024
+    let fileSize = 1 * 1024 * 1024
     let fileHandle = try FileHandle(forUpdating: fileURL)
     try fileHandle.truncate(atOffset: UInt64(fileSize))
     try fileHandle.seek(toOffset: 0)
@@ -134,18 +135,18 @@ final class FileStreamsTests: XCTestCase {
 
     let reader = Task {
       for try await data in source.buffers(size: 133) {
-        print("Read \(data.count) bytes of data")
+        _ = data.count
+        // print("Read \(data.count) bytes of data")
       }
     }
 
-    try await Task.sleep(nanoseconds: 100_000)
+    try await Task.sleep(nanoseconds: 5_000_000)
 
     do {
       reader.cancel()
       try await reader.value
     }
-    catch is CancellationError {
-    }
+    catch is CancellationError {}
 
     XCTAssert(source.bytesRead > 0, "Data should have been read from source")
     XCTAssert(source.bytesRead < fileSize, "Source should have cancelled iteration")

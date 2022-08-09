@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import Foundation
 import CryptoKit
+import Foundation
 
 /// ``Stream`` that produces data.
 public protocol Source: Stream {
-  
+
   /// Number of bytes read from stream.
   ///
   /// - Throws: ``IOError`` if the # of bytes read could not be determined.

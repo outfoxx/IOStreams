@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import XCTest
 import CryptoKit
 @testable import IOStreams
+import XCTest
 
 final class HashingFilterTests: XCTestCase {
 

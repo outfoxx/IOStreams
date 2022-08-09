@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import Foundation
 import CryptoKit
+import Foundation
 
 /// Cryptographic box sealing or opening cipher ``Sink``.
 ///
@@ -73,7 +73,7 @@ public class BoxCipherFilter: Filter {
   private let operation: (Data, AAD, SymmetricKey) throws -> Data
   private let algorthm: Algorithm
   private var boxIndex: UInt64 = 0
-  private var lastBoxData: Data? = nil
+  private var lastBoxData: Data?
 
   /// Initializes the cipher with the given ``Operation``, ``Algorithm``, and
   /// cryptographic key.
@@ -83,7 +83,7 @@ public class BoxCipherFilter: Filter {
   ///   - algorithm: Box cipher algorithm to use.
   ///
   public init(operation: Operation, algorithm: Algorithm, key: SymmetricKey) {
-    self.algorthm = algorithm
+    algorthm = algorithm
     switch (algorithm, operation) {
     case (.aesGcm, .seal):
       self.operation = Self.AESGCMOps.seal(data:aad:key:)
@@ -110,7 +110,7 @@ public class BoxCipherFilter: Filter {
 
     lastBoxData = data
 
-    defer { boxIndex += 1}
+    defer { boxIndex += 1 }
 
     return try operation(boxData, AAD(index: boxIndex, isFinal: false), key)
   }
@@ -180,7 +180,11 @@ public extension Source {
   ///   - operation: Operation (seal or open) to apply.
   ///   - key: Key to use for cipher.
   /// - Returns: Box ciphered source stream reading from this stream.
-  func boxCiphered(algorithm: BoxCipherFilter.Algorithm, operation: BoxCipherFilter.Operation, key: SymmetricKey) -> Source {
+  func boxCiphered(
+    algorithm: BoxCipherFilter.Algorithm,
+    operation: BoxCipherFilter.Operation,
+    key: SymmetricKey
+  ) -> Source {
     filtered(filter: BoxCipherFilter(operation: operation, algorithm: algorithm, key: key))
   }
 
@@ -195,7 +199,11 @@ public extension Sink {
   ///   - operation: Operation (seal or open) to apply.
   ///   - key: Key to use for cipher.
   /// - Returns: Box ciphered sink stream writing to this stream.
-  func boxCiphered(algorithm: BoxCipherFilter.Algorithm, operation: BoxCipherFilter.Operation, key: SymmetricKey) -> Sink {
+  func boxCiphered(
+    algorithm: BoxCipherFilter.Algorithm,
+    operation: BoxCipherFilter.Operation,
+    key: SymmetricKey
+  ) -> Sink {
     filtered(filter: BoxCipherFilter(operation: operation, algorithm: algorithm, key: key))
   }
 

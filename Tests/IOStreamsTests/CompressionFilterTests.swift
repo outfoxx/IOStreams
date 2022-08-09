@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import XCTest
 import CryptoKit
 @testable import IOStreams
+import XCTest
 
 final class CompressionFilterTests: XCTestCase {
 
@@ -25,25 +25,30 @@ final class CompressionFilterTests: XCTestCase {
     let data = Data(repeating: 0x5A, count: (512 * 1024) + 3333)
     let sink = DataSink()
 
-    let compressingSource = try data.source().compress(algorithm: .lz4)
+    print("opening sink")
+    let decompressingSink = try sink.decompress(algorithm: .lz4)
     do {
 
-      let decompressingSink = try sink.decompress(algorithm: .lz4)
+      print("opening source")
+      let compressingSource = try data.source().compress(algorithm: .lz4)
       do {
 
+        print("piping source to sink")
         try await compressingSource.pipe(to: decompressingSink)
 
-        try await decompressingSink.close()
+        try await compressingSource.close()
       }
       catch {
-        try await decompressingSink.close()
+        try await compressingSource.close()
+        print("closing source failed: \(error)")
         throw error
       }
 
-      try await compressingSource.close()
+      try await decompressingSink.close()
     }
     catch {
-      try await compressingSource.close()
+      try await decompressingSink.close()
+      print("closing sink failed: \(error)")
       throw error
     }
 
