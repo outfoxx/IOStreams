@@ -24,7 +24,10 @@ import Foundation
 ///
 public class CompressionFilter: Filter {
 
+  private static let bufferSize = BufferedSink.segmentSize
+
   private var filter: OutputFilter?
+  private var input: Data
   private var output: Data?
 
   /// Initializes the filter with the given `operation` and `algorithm`.
@@ -34,6 +37,7 @@ public class CompressionFilter: Filter {
   ///   - algorithm: Compression algorithm to use.
   ///
   public init(operation: FilterOperation, algorithm: Algorithm) throws {
+    input = Data(capacity: Self.bufferSize)
     filter = try OutputFilter(operation, using: algorithm) { [self] data in
       guard let data = data else { return }
 
@@ -54,7 +58,16 @@ public class CompressionFilter: Filter {
   public func process(data: Data) throws -> Data {
     guard let filter = filter else { fatalError() }
 
-    try filter.write(data)
+    input.append(data)
+
+    while input.count >= Self.bufferSize {
+
+      let range = 0 ..< Self.bufferSize
+
+      try filter.write(input.subdata(in: range))
+
+      input.removeSubrange(range)
+    }
 
     defer { output = nil }
 
@@ -68,6 +81,8 @@ public class CompressionFilter: Filter {
   ///
   public func finish() throws -> Data? {
     guard let filter = filter else { return nil }
+
+    try filter.write(input)
 
     try filter.finalize()
 
