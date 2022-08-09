@@ -123,6 +123,9 @@ public extension Source {
   func pipe(to sink: Sink) async throws {
 
     for try await data in buffers() {
+
+      try Task.checkCancellation()
+
       try await sink.write(data: data)
     }
   }

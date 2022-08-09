@@ -56,6 +56,8 @@ public class BufferedSource: Source {
 
     while data.count < requiredSize {
 
+      try Task.checkCancellation()
+
       guard let more = try await source.read(max: segmentSize) else {
         return false
       }
@@ -155,7 +157,11 @@ public class BufferedSink: Sink, Flushable {
   private func flush(size: Int) async throws {
 
     while data.count > size {
+
+      try Task.checkCancellation()
+
       try await sink.write(data: data.prefix(segmentSize))
+
       data = data.dropFirst(segmentSize)
     }
   }
