@@ -20,16 +20,15 @@ import XCTest
 
 final class CompressionFilterTests: XCTestCase {
 
-  // https://github.com/outfoxx/IOStreams/issues/2
-  func disabled_testRountTrip() async throws {
+  func testRountTrip() async throws {
 
     let data = Data(repeating: 0x5A, count: (512 * 1024) + 3333)
     let sink = DataSink()
 
-    let decompressingSink = try sink.decompress(algorithm: .lz4)
+    let decompressingSink = try sink.decompress(algorithm: .zlib)
     do {
 
-      let compressingSource = try data.source().compress(algorithm: .lz4)
+      let compressingSource = try data.source().compress(algorithm: .zlib)
       do {
 
         try await compressingSource.pipe(to: decompressingSink)

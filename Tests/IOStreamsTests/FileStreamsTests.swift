@@ -33,71 +33,18 @@ final class FileStreamsTests: XCTestCase {
     try? FileManager.default.removeItem(at: fileURL)
   }
 
-  @available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
-  func disabled_testSourceReadsCompletelyUsingBytes() async throws {
-
-    let fileSize = 50 * 1024 * 1024
-    let fileHandle = try FileHandle(forUpdating: fileURL)
-    try fileHandle.truncate(atOffset: UInt64(fileSize))
-
-    measureMetrics([.wallClockTime], automaticallyStartMeasuring: false) {
-      let completed = DispatchSemaphore(value: 0)
-
-      Task {
-        try fileHandle.seek(toOffset: 0)
-        let bytes = fileHandle.bytes
-
-        var bytesRead = 0
-
-        startMeasuring()
-
-        var data = Data(capacity: fileSize)
-        for try await byte in bytes {
-          data.append(byte)
-          bytesRead = bytesRead + 1
-        }
-
-        stopMeasuring()
-
-        // print("Read \(bytesRead) bytes")
-
-        XCTAssertEqual(bytesRead, fileSize)
-
-        completed.signal()
-      }
-
-      completed.wait()
-    }
-  }
-
   func testSourceReadsCompletely() async throws {
 
     let fileSize = 50 * 1024 * 1024
     let fileHandle = try FileHandle(forUpdating: fileURL)
     try fileHandle.truncate(atOffset: UInt64(fileSize))
+    try fileHandle.seek(toOffset: 0)
 
-    measureMetrics([.wallClockTime], automaticallyStartMeasuring: false) {
-      let completed = DispatchSemaphore(value: 0)
+    let source = try FileSource(fileHandle: fileHandle)
 
-      Task {
-        try fileHandle.seek(toOffset: 0)
-        let source = try FileSource(fileHandle: fileHandle)
+    for try await _ in source.buffers() {}
 
-        startMeasuring()
-
-        for try await _ in source.buffers() {}
-
-        stopMeasuring()
-
-        // print("Read \(source.bytesRead) bytes")
-
-        XCTAssertEqual(source.bytesRead, fileSize)
-
-        completed.signal()
-      }
-
-      completed.wait()
-    }
+    XCTAssertEqual(source.bytesRead, fileSize)
   }
 
   func testSourceCancels() async throws {
@@ -105,6 +52,7 @@ final class FileStreamsTests: XCTestCase {
     let fileSize = 256 * 1024
     let fileHandle = try FileHandle(forUpdating: fileURL)
     try fileHandle.truncate(atOffset: UInt64(fileSize))
+    try fileHandle.seek(toOffset: 0)
 
     let source = try FileSource(url: fileURL)
 
@@ -134,10 +82,7 @@ final class FileStreamsTests: XCTestCase {
     let source = try FileSource(fileHandle: fileHandle)
 
     let reader = Task {
-      for try await data in source.buffers(size: 133) {
-        _ = data.count
-        // print("Read \(data.count) bytes of data")
-      }
+      for try await _ in source.buffers(size: 133) {}
     }
 
     try await Task.sleep(nanoseconds: 5_000_000)
