@@ -94,7 +94,7 @@ public class FileSink: FileStream, Sink {
 
         data.withUnsafeBytes { dataPtr in
 
-          let data = DispatchData(bytesNoCopy: dataPtr)
+          let data = DispatchData(bytes: dataPtr)
 
           io.write(offset: 0, data: data, queue: .taskPriority) { _, _, error in
 
