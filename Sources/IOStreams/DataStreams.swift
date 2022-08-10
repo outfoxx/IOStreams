@@ -15,21 +15,21 @@
  */
 
 import Foundation
-//
-//  DataStreams.swift
-//  MirrorShared
-//
-//  Created by Kevin Wooten on 8/2/22.
-//
 
-
+/// ``Source`` that reads directly from a `Data` buffer.
+///
 public class DataSource: Source {
 
+  /// Data buffer source is reading from.
   public private(set) var data: Data
   public private(set) var bytesRead = 0
 
   private var closed = false
 
+  /// Initialize the stream with a specified source `data` buffer.
+  ///
+  /// - Parameter data: Data buffer to read from.
+  ///
   public init(data: Data) {
     self.data = data
   }
@@ -56,13 +56,21 @@ public class DataSource: Source {
 
 }
 
+/// ``Sink`` that writes directly to a `Data` buffer.
+///
 public class DataSink: Sink {
 
+  /// Data buffer sink is writing to.
   public private(set) var data: Data
   public var bytesWritten: Int { data.count }
 
   private var closed = false
 
+  /// Initialize the stream with a specified target `data` buffer.
+  ///
+  /// - Parameter data: Data buffer to write to. Defaults to
+  /// the empty buffer.
+  ///
   public init(data: Data = Data()) {
     self.data = data
   }
