@@ -6,6 +6,7 @@ default: clean build-test-all
 clean:
 	rm -rf TestResults
 	rm -rf .derived-data
+	rm -rf .build
 
 make-test-results-dir:
 	mkdir -p TestResults
