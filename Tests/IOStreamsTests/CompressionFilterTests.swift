@@ -20,27 +20,24 @@ import XCTest
 
 final class CompressionFilterTests: XCTestCase {
 
-  func testRountTrip() async throws {
+  // https://github.com/outfoxx/IOStreams/issues/2
+  func disabled_testRountTrip() async throws {
 
     let data = Data(repeating: 0x5A, count: (512 * 1024) + 3333)
     let sink = DataSink()
 
-    print("opening sink")
     let decompressingSink = try sink.decompress(algorithm: .lz4)
     do {
 
-      print("opening source")
       let compressingSource = try data.source().compress(algorithm: .lz4)
       do {
 
-        print("piping source to sink")
         try await compressingSource.pipe(to: decompressingSink)
 
         try await compressingSource.close()
       }
       catch {
         try await compressingSource.close()
-        print("closing source failed: \(error)")
         throw error
       }
 
@@ -48,7 +45,6 @@ final class CompressionFilterTests: XCTestCase {
     }
     catch {
       try await decompressingSink.close()
-      print("closing sink failed: \(error)")
       throw error
     }
 
