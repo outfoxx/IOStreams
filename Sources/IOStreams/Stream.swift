@@ -25,4 +25,3 @@ public protocol Stream {
   func close() async throws
 
 }
-

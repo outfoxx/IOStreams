@@ -138,6 +138,6 @@ public extension Sink {
 }
 
 private protocol Function {
-  mutating func update(data: Data) -> Void
+  mutating func update(data: Data)
   mutating func finalize() -> Data
 }

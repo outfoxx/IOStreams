@@ -70,7 +70,7 @@ public class FileSource: FileStream, Source {
       }
     }
 
-    bytesRead = bytesRead + (data?.count ?? 0)
+    bytesRead += data?.count ?? 0
 
     return data
   }
@@ -119,7 +119,7 @@ public class FileSink: FileStream, Sink {
       }
     } as Void
 
-    bytesWritten = bytesWritten + Int(data.count)
+    bytesWritten += Int(data.count)
   }
 
 }
