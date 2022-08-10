@@ -134,10 +134,14 @@ public class FileSink: FileStream, Sink {
 
           let data = DispatchData(bytes: dataPtr)
 
-          io.write(offset: 0, data: data, queue: .taskPriority) { _, _, error in
+          io.write(offset: 0, data: data, queue: .taskPriority) { done, _, error in
 
             if task?.isCancelled ?? false {
               continuation.resume(throwing: CancellationError())
+              return
+            }
+
+            guard done else {
               return
             }
 
