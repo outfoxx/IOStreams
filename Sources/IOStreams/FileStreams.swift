@@ -25,6 +25,25 @@ public class FileSource: FileStream, Source {
 
   public private(set) var bytesRead: Int = 0
 
+  /// Initialize the source from a file `URL`.
+  ///
+  /// - Parameter url: `URL` of the file to operate on.
+  ///
+  public convenience init(url: URL) throws {
+    try self.init(fileHandle: FileHandle(forReadingFrom: url))
+  }
+
+  /// Initialize the source from a file path.
+  ///
+  /// - Parameter path: path of the file to operate on.
+  ///
+  public convenience init(path: String) throws {
+    guard let fileHandle = FileHandle(forReadingAtPath: path) else {
+      throw IOError.noSuchFile
+    }
+    try self.init(fileHandle: fileHandle)
+  }
+
   public func read(max: Int) async throws -> Data? {
     guard !closedState.closed else { throw IOError.streamClosed }
 
@@ -84,6 +103,25 @@ public class FileSource: FileStream, Source {
 public class FileSink: FileStream, Sink {
 
   public private(set) var bytesWritten: Int = 0
+
+  /// Initialize the sink from a file `URL`.
+  ///
+  /// - Parameter url: `URL` of the file to operate on.
+  ///
+  public convenience init(url: URL) throws {
+    try self.init(fileHandle: FileHandle(forWritingTo: url))
+  }
+
+  /// Initialize the sink from a file path.
+  ///
+  /// - Parameter path: path of the file to operate on.
+  ///
+  public convenience init(path: String) throws {
+    guard let fileHandle = FileHandle(forWritingAtPath: path) else {
+      throw IOError.noSuchFile
+    }
+    try self.init(fileHandle: fileHandle)
+  }
 
   public func write(data: Data) async throws {
     guard !closedState.closed else { throw IOError.streamClosed }
@@ -145,26 +183,6 @@ public class FileStream: Stream {
   fileprivate let fileHandle: FileHandle
   fileprivate var io: DispatchIO!
   fileprivate var closedState = CloseState()
-
-
-  /// Initialize the stream from a file `URL`.
-  ///
-  /// - Parameter url: `URL` of the file to operate on.
-  ///
-  public convenience init(url: URL) throws {
-    try self.init(fileHandle: FileHandle(forReadingFrom: url))
-  }
-
-  /// Initialize the stream from a file path.
-  ///
-  /// - Parameter path: path of the file to operate on.
-  ///
-  public convenience init(path: String) throws {
-    guard let fileHandle = FileHandle(forReadingAtPath: path) else {
-      throw IOError.noSuchFile
-    }
-    try self.init(fileHandle: fileHandle)
-  }
 
   /// Initialize the stream from a file handle.
   ///
