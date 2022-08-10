@@ -3,6 +3,7 @@ name: Deploy documentation to Pages
 on:
   push:
     tags: ["[0-9]+.[0-9]+.[0-9]+**"]
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -25,10 +26,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - uses: olegtarasov/get-tag@v2.1
+        id: tagName
+
       - uses: fwcd/swift-docc-action@v1
         with:
           target: IOStreams
-          output: ./docs
+          output: ./docs/${{ steps.tagName.outputs.tag }}
           hosting-base-path: IOStreams
           disable-indexing: 'true'
           transform-for-static-hosting: 'true'
