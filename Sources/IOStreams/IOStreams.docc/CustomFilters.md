@@ -31,5 +31,5 @@ For each call of ``Filter/process(data:)`` the method _may_ return some output d
 stream data is exhausted, when ``Source/read(max:)`` return `nil` for sources or on ``Stream/close()`` for sinks,
 then the filter's ``Filter/finish()`` method is called.
 
-> Important: Filter's are always one-time-use. They are created for a specific stream and used until it closed, at
+> Important: Filters are always one-time-use. They are created for a specific stream and used until it closed, at
 which point they are discarded.
