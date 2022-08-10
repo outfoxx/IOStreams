@@ -13,6 +13,8 @@ IOStreams comes with a number of standard sources and sinks, like files and memo
 concurrency model of Swift. Additionaly, IOStreams has been integrated with many Apple frameworks to provide buffering,
 compression, encryption, hashing, etc.
 
+[Package Documentation](https://outfoxx.github.io/IOStreams/documentation/iostreams/)
+
 ## Getting Started
 
 Using IOStreams is easy and allows you to consume high performance frameworks, like `DispatchIO`, using Swift
