@@ -105,7 +105,7 @@ public class BufferedSource: Source {
 
 }
 
-/// ``Source`` that buffers data before writing to ``sink``.
+/// ``Sink`` that buffers data before writing to ``sink``.
 ///
 public class BufferedSink: Sink, Flushable {
 

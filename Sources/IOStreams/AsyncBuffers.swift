@@ -16,7 +16,7 @@
 
 import Foundation
 
-/// An `AsynSequence` of `Data` buffers read from a spcific ``Source``
+/// An `AsyncSequence` of `Data` buffers read from a specific ``Source``
 ///
 public struct AsyncBuffers: AsyncSequence {
 
