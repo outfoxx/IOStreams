@@ -1,5 +1,8 @@
 # 🚰 IOStreams
 
+[![CI](https://github.com/outfoxx/IOStreams/actions/workflows/ci.yaml/badge.svg)](https://github.com/outfoxx/IOStreams/actions/workflows/ci.yaml)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/outfoxx/IOStreams)
+
 ## An asynchronous Swift I/O library
 
 IOStreams is an asynchronous I/O library designed to make it easy to read & write your data taking full advantage of
