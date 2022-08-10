@@ -109,6 +109,14 @@ public extension Source {
 
   /// Allows ``Source`` to be treated as an `AsynSequence` of `Data` buffers.
   ///
+  /// As an `AsyncSequence` it allows the source to be iterated easily using
+  /// Swift's `for await-in` loop:
+  /// ```swift
+  ///   for try await buffer in source.buffers() {
+  ///     // do work on buffer
+  ///   }
+  /// ```
+  ///
   /// - Parameter size: Size of buffers to produce on each iteration,
   ///   unless an end-of-stream is encountered.
   /// - Returns: An `AsyncSequence` of `Data` buffers
