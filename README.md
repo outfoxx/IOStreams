@@ -7,6 +7,10 @@
 
 ## Getting Started
 
+IOStreams is a Swift package and delivered using the Swift Package Manager.
+
+To use IOStreams in your project, add the following dependency to its `package.swift`:
+
 ```swift
   dependencies: [
     ...
@@ -16,6 +20,8 @@
 ```
 
 ## Documentation
+
+IOStreams has documentation to get you started using the library as well as complete reference documentation.
 
 [Package Documentation](https://outfoxx.github.io/IOStreams/documentation/iostreams/)
   
