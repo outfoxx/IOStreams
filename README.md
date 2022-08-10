@@ -3,7 +3,12 @@
 ## An asynchronous Swift I/O library
 
 [![CI](https://github.com/outfoxx/IOStreams/actions/workflows/ci.yaml/badge.svg)](https://github.com/outfoxx/IOStreams/actions/workflows/ci.yaml)
+
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/outfoxx/IOStreams)
+
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Foutfoxx%2FIOStreams%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/outfoxx/IOStreams)
+
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Foutfoxx%2FIOStreams%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/outfoxx/IOStreams)
 
 ## Getting Started
 
