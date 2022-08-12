@@ -17,9 +17,18 @@
 import CryptoKit
 import Foundation
 
+/// Provides access to the result of a hashing filter, after
+/// the stream that is using has been closed.
+///
 public protocol HashingResult {
 
-  var digest: Data? { get }
+  /// Computed digest result.
+  ///
+  /// - Note: The value is not valid until the
+  /// stream that is using the related filter is
+  /// closed.
+  ///
+  var digest: Data { get }
 
 }
 
@@ -56,7 +65,7 @@ public class HashingFilter: Filter, HashingResult {
   /// - Note: Available after calling the ``finish()``, which
   /// is called when ``FilterSink/close()`` or ``FilterSource/close()``
   ///
-  public private(set) var digest: Data?
+  public private(set) var digest = Data()
 
   /// Initialize the instance to use the algorithm provided by
   /// `algorithm`.
