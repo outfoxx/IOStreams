@@ -36,16 +36,31 @@ public protocol HashingResult {
 ///
 public class HashingFilter: Filter, HashingResult {
 
+  /// Hash Algorithm
+  ///
   public enum Algorithm {
+
     /// Secure Hashing Algorithm 2 (SHA-2) hashing with a 512-bit digest.
     case sha512
+
     /// Secure Hashing Algorithm 2 (SHA-2) hashing with a 384-bit digest.
     case sha384
+
     /// Secure Hashing Algorithm 2 (SHA-2) hashing with a 256-bit digest.
     case sha256
+
     /// Secure Hashing Algorithm 1 (SHA-1) hashing with a 160-bit digest.
+    ///
+    /// - Warning: SHA-1 is considered insecure and should not be used
+    /// for cryptographic operations.
+    ///
     case sha1
-    /// MD5 Hashing Algorithm
+
+    /// MD5 Hashing Algorithm.
+    ///
+    /// - Warning: MD5 is considered insecure and should not be used
+    /// for cryptographic operations.
+    ///
     case md5
   }
 
