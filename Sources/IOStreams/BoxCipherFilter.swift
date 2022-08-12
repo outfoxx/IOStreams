@@ -83,7 +83,7 @@ public class BoxCipherFilter: Filter {
   ///   - operation: Operation to perform on the passed in data.
   ///   - algorithm: Box cipher algorithm to use.
   ///   - key: Cryptographic key to use for sealing/opening.
-  ///   - boxDataSize: Size of each cryptographic box.
+  ///   - boxDataSize: Size of each cryptographic box; final box may be smaller.
   ///
   public init(
     operation: Operation,
@@ -214,7 +214,7 @@ public extension Source {
   ///   - algorithm: Alogorithm for box ciphering.
   ///   - operation: Operation (seal or open) to apply.
   ///   - key: Key to use for cipher.
-  ///   - boxDataSize: Size of data in each box.
+  ///   - boxDataSize: Size of data in each box; final box may be smaller.
   /// - Returns: Box ciphered source stream reading from this stream.
   func boxCiphered(
     algorithm: BoxCipherFilter.Algorithm,
@@ -235,7 +235,7 @@ public extension Sink {
   ///   - algorithm: Alogorithm for box ciphering.
   ///   - operation: Operation (seal or open) to apply.
   ///   - key: Key to use for cipher.
-  ///   - boxDataSize: Size of data in each box.
+  ///   - boxDataSize: Size of data in each box; final box may be smaller.
   /// - Returns: Box ciphered sink stream writing to this stream.
   func boxCiphered(
     algorithm: BoxCipherFilter.Algorithm,
