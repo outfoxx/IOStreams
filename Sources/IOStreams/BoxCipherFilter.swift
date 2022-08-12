@@ -56,19 +56,19 @@ public class BoxCipherFilter: Filter {
     public let isFinal: Bool
   }
 
-  /// Size of the tag produced by the seal operation.
+  /// Size of the random nonce prepended to each box data.
+  public static let nonceSize = 12
+  /// Size of the tag produced by the seal operation and appended to the box data.
   public static let tagSize = 16
+
+  /// Reports the size of a sealed box for a given box data size.
+  ///
+  /// - Parameter dataSize: Size of data in box.
+  ///
+  public static func sealedBoxSize(dataSize: Int) -> Int { dataSize + nonceSize + tagSize }
 
   /// Key used to seal or open boxes.
   public let key: SymmetricKey
-
-  /// Overhead size of the sealing operation.
-  public var sizeOverhead: Int {
-    switch algorthm {
-    case .aesGcm: return 12 + Self.tagSize
-    case .chaCha20Poly: return 12 + Self.tagSize
-    }
-  }
 
   private let operation: (Data, AAD, SymmetricKey) throws -> Data
   private let algorthm: Algorithm
@@ -98,13 +98,13 @@ public class BoxCipherFilter: Filter {
       self.boxDataSize = boxDataSize
     case (.aesGcm, .open):
       self.operation = Self.AESGCMOps.open(data:aad:key:)
-      self.boxDataSize = boxDataSize + 12 + Self.tagSize
+      self.boxDataSize = Self.sealedBoxSize(dataSize: boxDataSize)
     case (.chaCha20Poly, .seal):
       self.operation = Self.ChaChaPolyOps.seal(data:aad:key:)
       self.boxDataSize = boxDataSize
     case (.chaCha20Poly, .open):
       self.operation = Self.ChaChaPolyOps.open(data:aad:key:)
-      self.boxDataSize = boxDataSize + 12 + Self.tagSize
+      self.boxDataSize = Self.sealedBoxSize(dataSize: boxDataSize)
     }
     self.key = key
   }
