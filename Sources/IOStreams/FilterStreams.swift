@@ -129,7 +129,7 @@ public extension Source {
   ///
   /// - Parameter filter: Filter to apply.
   /// - Returns: Filtered source stream reading from this stream.
-  func filtered(filter: Filter) -> Source {
+  func filtering(using filter: Filter) -> Source {
     FilterSource(source: self, filter: filter)
   }
 
@@ -141,7 +141,7 @@ public extension Sink {
   ///
   /// - Parameter filter: Filter to apply.
   /// - Returns: Filtered sink stream writing to this stream.
-  func filtered(filter: Filter) -> Sink {
+  func filtering(using filter: Filter) -> Sink {
     FilterSink(sink: self, filter: filter)
   }
 

@@ -218,13 +218,47 @@ public extension Source {
   /// - Returns: Box ciphered source stream reading from this stream.
   /// - SeeAlso: ``BoxCipherFilter``
   ///
-  func boxCiphered(
-    algorithm: BoxCipherFilter.Algorithm,
+  func applying(
+    boxCipher algorithm: BoxCipherFilter.Algorithm,
     operation: BoxCipherFilter.Operation,
     key: SymmetricKey,
     boxDataSize: Int = BufferedSource.segmentSize
   ) -> Source {
-    filtered(filter: BoxCipherFilter(operation: operation, algorithm: algorithm, key: key, boxDataSize: boxDataSize))
+    filtering(using: BoxCipherFilter(operation: operation, algorithm: algorithm, key: key, boxDataSize: boxDataSize))
+  }
+
+  /// Applies a sealing filter for a box cipher to this stream.
+  ///
+  /// - Parameters:
+  ///   - algorithm: Alogorithm for box ciphering.
+  ///   - key: Key to use for cipher.
+  ///   - boxDataSize: Size of data in each box; final box may be smaller.
+  /// - Returns: Box ciphered source stream reading from this stream.
+  /// - SeeAlso: ``BoxCipherFilter``
+  ///
+  func sealing(
+    algorithm: BoxCipherFilter.Algorithm,
+    key: SymmetricKey,
+    boxDataSize: Int = BufferedSource.segmentSize
+  ) -> Source {
+    applying(boxCipher: algorithm, operation: .seal, key: key, boxDataSize: boxDataSize)
+  }
+
+  /// Applies an opening filter for a box cipher to this stream.
+  ///
+  /// - Parameters:
+  ///   - algorithm: Alogorithm for box ciphering.
+  ///   - key: Key to use for cipher.
+  ///   - boxDataSize: Size of data in each box; final box may be smaller.
+  /// - Returns: Box ciphered source stream reading from this stream.
+  /// - SeeAlso: ``BoxCipherFilter``
+  ///
+  func opening(
+    algorithm: BoxCipherFilter.Algorithm,
+    key: SymmetricKey,
+    boxDataSize: Int = BufferedSource.segmentSize
+  ) -> Source {
+    applying(boxCipher: algorithm, operation: .open, key: key, boxDataSize: boxDataSize)
   }
 
 }
@@ -241,13 +275,47 @@ public extension Sink {
   /// - Returns: Box ciphered sink stream writing to this stream.
   /// - SeeAlso: ``BoxCipherFilter``
   ///
-  func boxCiphered(
-    algorithm: BoxCipherFilter.Algorithm,
+  func applying(
+    boxCipher algorithm: BoxCipherFilter.Algorithm,
     operation: BoxCipherFilter.Operation,
     key: SymmetricKey,
     boxDataSize: Int = BufferedSource.segmentSize
   ) -> Sink {
-    filtered(filter: BoxCipherFilter(operation: operation, algorithm: algorithm, key: key, boxDataSize: boxDataSize))
+    filtering(using: BoxCipherFilter(operation: operation, algorithm: algorithm, key: key, boxDataSize: boxDataSize))
+  }
+
+  /// Applies a sealing filter for a box cipher to this stream.
+  ///
+  /// - Parameters:
+  ///   - algorithm: Alogorithm for box ciphering.
+  ///   - key: Key to use for cipher.
+  ///   - boxDataSize: Size of data in each box; final box may be smaller.
+  /// - Returns: Box ciphered sink stream writing to this stream.
+  /// - SeeAlso: ``BoxCipherFilter``
+  ///
+  func sealing(
+    algorithm: BoxCipherFilter.Algorithm,
+    key: SymmetricKey,
+    boxDataSize: Int = BufferedSource.segmentSize
+  ) -> Sink {
+    applying(boxCipher: algorithm, operation: .seal, key: key, boxDataSize: boxDataSize)
+  }
+
+  /// Applies an opening filter for a box cipher to this stream.
+  ///
+  /// - Parameters:
+  ///   - algorithm: Alogorithm for box ciphering.
+  ///   - key: Key to use for cipher.
+  ///   - boxDataSize: Size of data in each box; final box may be smaller.
+  /// - Returns: Box ciphered sink stream writing to this stream.
+  /// - SeeAlso: ``BoxCipherFilter``
+  ///
+  func opening(
+    algorithm: BoxCipherFilter.Algorithm,
+    key: SymmetricKey,
+    boxDataSize: Int = BufferedSource.segmentSize
+  ) -> Sink {
+    applying(boxCipher: algorithm, operation: .open, key: key, boxDataSize: boxDataSize)
   }
 
 }

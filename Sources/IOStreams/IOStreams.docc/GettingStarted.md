@@ -26,7 +26,7 @@ func processFile(from sourceURL: URL, to sinkURL: URL) async {
 ```
 
 If you are reading or writing small amounts of data at a time, buffering the streams can provide a big performance
-boost, and with IOSStreams it's as easy as calling ``Source/buffered(segmentSize:)``.
+boost, and with IOSStreams it's as easy as calling ``Source/buffering(segmentSize:)``.
 
 ```swift
   let source = FileSource(url: sourceURL).buffered()
@@ -39,12 +39,12 @@ IOStreams provides enhanced filtering capabilities that allow data to be process
 provide advanced data processing features like compression and encryption.
 
 For example, to compress the file from the previous example as it is being written to disk you only need to add a
-call to ``Sink/compress(algorithm:)``:
+call to ``Sink/compressing(algorithm:)``:
 ```swift
   let sink = FileSink(url: sinkURL).compress(algorithm: .lz4)
 ```
 
-To decompress the file while reading it later you can call ``Source/decompress(algorithm:)``;
+To decompress the file while reading it later you can call ``Source/decompressing(algorithm:)``;
 ```swift
   let source = FileSource(url: sourceURL).decompress(algorithm: .lz4)
 ```
