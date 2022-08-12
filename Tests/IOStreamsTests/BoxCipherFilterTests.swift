@@ -27,10 +27,10 @@ final class BoxCipherFilterTests: XCTestCase {
 
     let key = SymmetricKey(size: .bits256)
 
-    let cipherSource = data.source().boxCiphered(algorithm: .aesGcm, operation: .seal, key: key)
+    let cipherSource = data.source().applying(boxCipher: .aesGcm, operation: .seal, key: key)
     do {
 
-      let cipherSink = sink.boxCiphered(algorithm: .aesGcm, operation: .open, key: key)
+      let cipherSink = sink.applying(boxCipher: .aesGcm, operation: .open, key: key)
       do {
 
         try await cipherSource.pipe(to: cipherSink, bufferSize: BufferedSource.segmentSize + 31)

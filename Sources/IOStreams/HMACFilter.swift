@@ -86,7 +86,7 @@ public extension Source {
     key: SymmetricKey
   ) -> (Source, HashingResult) {
     let filter = HMACFilter(algorithm: algorithm, key: key)
-    return (filtered(filter: filter), filter)
+    return (filtering(using: filter), filter)
   }
 
 }
@@ -107,7 +107,7 @@ public extension Sink {
     key: SymmetricKey
   ) -> (Sink, HashingResult) {
     let filter = HMACFilter(algorithm: algorithm, key: key)
-    return (filtered(filter: filter), filter)
+    return (filtering(using: filter), filter)
   }
 
 }

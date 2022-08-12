@@ -109,7 +109,7 @@ public class BufferedSource: Source {
 ///
 public class BufferedSink: Sink, Flushable {
 
-  /// Size of segments read from ``BufferedSource/source``
+  /// Size of segments written to ``BufferedSink/sink``
   public static let segmentSize = BufferedSource.segmentSize
 
   /// ``Sink`` that data is written to.
@@ -183,7 +183,7 @@ public extension Source {
   ///
   /// - Parameter segmentSize: Size of buffers that will be read from this stream.
   /// - Returns: Buffered source stream reading from this stream.
-  func buffered(segmentSize: Int = BufferedSource.segmentSize) -> Source {
+  func buffering(segmentSize: Int = BufferedSource.segmentSize) -> Source {
     if self is BufferedSource {
       return self
     }
@@ -198,7 +198,7 @@ public extension Sink {
   ///
   /// - Parameter segmentSize: Size of buffers that will be written to this stream.
   /// - Returns: Buffered sink stream writing to this stream.
-  func buffered(segmentSize: Int = BufferedSink.segmentSize) -> Sink {
+  func buffering(segmentSize: Int = BufferedSink.segmentSize) -> Sink {
     if self is BufferedSink {
       return self
     }

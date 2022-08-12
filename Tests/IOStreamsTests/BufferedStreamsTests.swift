@@ -23,7 +23,7 @@ final class BufferedStreamsTests: XCTestCase {
 
     let data = Data((0 ..< 1024).map { _ in UInt8.random(in: 0 ... 255) })
 
-    let source = ReadSizeValidator(source: data.source(), size: 128).buffered(segmentSize: 128)
+    let source = ReadSizeValidator(source: data.source(), size: 128).buffering(segmentSize: 128)
 
     var read = try await source.read(exactly: 1)
     XCTAssertEqual(read, data[0 ..< 1])
@@ -65,7 +65,7 @@ final class BufferedStreamsTests: XCTestCase {
     let data = Data((0 ..< 1024).map { _ in UInt8.random(in: 0 ... 255) })
 
     let dataSink = DataSink()
-    let sink = WriteSizeValidator(sink: dataSink, size: 128).buffered(segmentSize: 128)
+    let sink = WriteSizeValidator(sink: dataSink, size: 128).buffering(segmentSize: 128)
 
     try await sink.write(data: data[0 ..< 1])
     try await sink.write(data: data[1 ..< 3])

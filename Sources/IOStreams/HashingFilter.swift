@@ -143,7 +143,7 @@ public extension Source {
   ///
   func hashing(algorithm: HashingFilter.Algorithm) -> (Source, HashingResult) {
     let filter = HashingFilter(algorithm: algorithm)
-    return (filtered(filter: filter), filter)
+    return (filtering(using: filter), filter)
   }
 
 }
@@ -160,7 +160,7 @@ public extension Sink {
   ///
   func hashing(algorithm: HashingFilter.Algorithm) -> (Sink, HashingResult) {
     let filter = HashingFilter(algorithm: algorithm)
-    return (filtered(filter: filter), filter)
+    return (filtering(using: filter), filter)
   }
 
 }
