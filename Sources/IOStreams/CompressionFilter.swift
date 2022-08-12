@@ -101,6 +101,8 @@ public extension Source {
   ///   - operation: Compression or decompression operation to perform.
   ///   - algorithm: Algorithm to compress with.
   /// - Returns: Compression source stream reading from this stream.
+  /// - SeeAlso: ``CompressionFilter``
+  ///
   func compression(operation: FilterOperation, algorithm: Algorithm) throws -> Source {
     filtered(filter: try CompressionFilter(operation: operation, algorithm: algorithm))
   }
@@ -110,6 +112,8 @@ public extension Source {
   /// - Parameters:
   ///   - algorithm: Algorithm to compress with.
   /// - Returns: Compressed source stream reading from this stream.
+  /// - SeeAlso: ``CompressionFilter``
+  ///
   func compress(algorithm: Algorithm) throws -> Source {
     try compression(operation: .compress, algorithm: algorithm)
   }
@@ -119,6 +123,8 @@ public extension Source {
   /// - Parameters:
   ///   - algorithm: Algorithm to decompress with.
   /// - Returns: Decompressed source stream reading from this stream.
+  /// - SeeAlso: ``CompressionFilter``
+  ///
   func decompress(algorithm: Algorithm) throws -> Source {
     try compression(operation: .decompress, algorithm: algorithm)
   }
@@ -133,6 +139,8 @@ public extension Sink {
   ///   - operation: Compression or decrompression operation to perform.
   ///   - algorithm: Algorithm to compress with.
   /// - Returns: Compression sink stream writing to this stream.
+  /// - SeeAlso: ``CompressionFilter``
+  ///
   func compression(operation: FilterOperation, algorithm: Algorithm) throws -> Sink {
     filtered(filter: try CompressionFilter(operation: operation, algorithm: algorithm))
   }
@@ -142,6 +150,8 @@ public extension Sink {
   /// - Parameters:
   ///   - algorithm: Algorithm to compress with.
   /// - Returns: Compressed sink stream writing to this stream.
+  /// - SeeAlso: ``CompressionFilter``
+  ///
   func compress(algorithm: Algorithm) throws -> Sink {
     try compression(operation: .compress, algorithm: algorithm)
   }
@@ -151,6 +161,8 @@ public extension Sink {
   /// - Parameters:
   ///   - algorithm: Algorithm to decompress with.
   /// - Returns: Decompressed sink stream writing to this stream.
+  /// - SeeAlso: ``CompressionFilter``
+  ///
   func decompress(algorithm: Algorithm) throws -> Sink {
     try compression(operation: .decompress, algorithm: algorithm)
   }

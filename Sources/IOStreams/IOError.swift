@@ -32,6 +32,7 @@ public enum IOError: Error {
   case streamClosed
 
   /// Filter operation failed.
+  /// - Parameter Error: The filter error that cause the I/O error.
   case filterFailure(Error)
 
   /// An unknown I/O operation occurred.

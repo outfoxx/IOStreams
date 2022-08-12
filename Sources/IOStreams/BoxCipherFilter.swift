@@ -216,6 +216,8 @@ public extension Source {
   ///   - key: Key to use for cipher.
   ///   - boxDataSize: Size of data in each box; final box may be smaller.
   /// - Returns: Box ciphered source stream reading from this stream.
+  /// - SeeAlso: ``BoxCipherFilter``
+  ///
   func boxCiphered(
     algorithm: BoxCipherFilter.Algorithm,
     operation: BoxCipherFilter.Operation,
@@ -237,6 +239,8 @@ public extension Sink {
   ///   - key: Key to use for cipher.
   ///   - boxDataSize: Size of data in each box; final box may be smaller.
   /// - Returns: Box ciphered sink stream writing to this stream.
+  /// - SeeAlso: ``BoxCipherFilter``
+  ///
   func boxCiphered(
     algorithm: BoxCipherFilter.Algorithm,
     operation: BoxCipherFilter.Operation,

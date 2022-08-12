@@ -115,6 +115,8 @@ public extension Source {
   ///   - algorithm: Hashing algorithm to calculate.
   /// - Returns: Hashing source stream reading from this stream and an
   ///   result object that provides access to the calculated digest.
+  /// - SeeAlso: ``HashingFilter``
+  ///
   func hashing(algorithm: HashingFilter.Algorithm) -> (Source, HashingResult) {
     let filter = HashingFilter(algorithm: algorithm)
     return (filtered(filter: filter), filter)
@@ -130,6 +132,8 @@ public extension Sink {
   ///   - algorithm: Hashing algorithm to calculate.
   /// - Returns: Hashing sink stream writing to this stream and an
   ///   result object that provides access to the calculated digest.
+  /// - SeeAlso: ``HashingFilter``
+  ///
   func hashing(algorithm: HashingFilter.Algorithm) -> (Sink, HashingResult) {
     let filter = HashingFilter(algorithm: algorithm)
     return (filtered(filter: filter), filter)
