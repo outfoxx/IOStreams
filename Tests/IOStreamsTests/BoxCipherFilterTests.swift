@@ -33,7 +33,7 @@ final class BoxCipherFilterTests: XCTestCase {
       let cipherSink = sink.boxCiphered(algorithm: .aesGcm, operation: .open, key: key)
       do {
 
-        try await cipherSource.pipe(to: cipherSink)
+        try await cipherSource.pipe(to: cipherSink, bufferSize: BufferedSource.segmentSize + 31)
 
         try await cipherSink.close()
       }

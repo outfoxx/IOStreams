@@ -73,7 +73,8 @@ public class BoxCipherFilter: Filter {
   private let operation: (Data, AAD, SymmetricKey) throws -> Data
   private let algorthm: Algorithm
   private var boxIndex: UInt64 = 0
-  private var lastBoxData: Data?
+  private var boxDataSize: Int
+  private var input = Data()
 
   /// Initializes the cipher with the given ``Operation``, ``Algorithm``, and
   /// cryptographic key.
@@ -81,18 +82,29 @@ public class BoxCipherFilter: Filter {
   /// - Parameters:
   ///   - operation: Operation to perform on the passed in data.
   ///   - algorithm: Box cipher algorithm to use.
+  ///   - key: Cryptographic key to use for sealing/opening.
+  ///   - boxDataSize: Size of each cryptographic box.
   ///
-  public init(operation: Operation, algorithm: Algorithm, key: SymmetricKey) {
+  public init(
+    operation: Operation,
+    algorithm: Algorithm,
+    key: SymmetricKey,
+    boxDataSize: Int = BufferedSource.segmentSize
+  ) {
     algorthm = algorithm
     switch (algorithm, operation) {
     case (.aesGcm, .seal):
       self.operation = Self.AESGCMOps.seal(data:aad:key:)
+      self.boxDataSize = boxDataSize
     case (.aesGcm, .open):
       self.operation = Self.AESGCMOps.open(data:aad:key:)
+      self.boxDataSize = boxDataSize + 12 + Self.tagSize
     case (.chaCha20Poly, .seal):
       self.operation = Self.ChaChaPolyOps.seal(data:aad:key:)
+      self.boxDataSize = boxDataSize
     case (.chaCha20Poly, .open):
       self.operation = Self.ChaChaPolyOps.open(data:aad:key:)
+      self.boxDataSize = boxDataSize + 12 + Self.tagSize
     }
     self.key = key
   }
@@ -101,18 +113,17 @@ public class BoxCipherFilter: Filter {
   /// or opens the box according to the ``Operation`` initialized
   /// with.
   ///
-  public func process(data: Data) async throws -> Data {
+  public func process(data: Data) throws -> Data {
 
-    guard let boxData = lastBoxData else {
-      lastBoxData = data
-      return Data()
+    input.append(data)
+    var output = Data()
+
+    while input.count >= (boxDataSize * 2) {
+
+      output.append(try processNextInputBox())
     }
 
-    lastBoxData = data
-
-    defer { boxIndex += 1 }
-
-    return try operation(boxData, AAD(index: boxIndex, isFinal: false), key)
+    return output
   }
 
   /// Finishes processig the sequence of boxes and
@@ -120,13 +131,37 @@ public class BoxCipherFilter: Filter {
   ///
   public func finish() throws -> Data? {
 
-    guard let boxData = lastBoxData else {
+    guard !input.isEmpty else {
       return nil
     }
 
-    lastBoxData = nil
+    var output = Data()
 
-    return try operation(boxData, AAD(index: boxIndex, isFinal: true), key)
+    if input.count >= boxDataSize {
+      output.append(try processNextInputBox())
+    }
+
+    // process any leftover data as a final (potentially smaller) box
+    if !input.isEmpty {
+      output.append(try operation(input, AAD(index: boxIndex, isFinal: true), key))
+      input.removeAll()
+    }
+
+    return output
+  }
+
+  private func processNextInputBox() throws -> Data {
+    precondition(input.count >= boxDataSize)
+
+    let range = 0 ..< boxDataSize
+
+    let processed = try operation(input.subdata(in: range), AAD(index: boxIndex, isFinal: false), key)
+
+    boxIndex += 1
+
+    input.removeSubrange(range)
+
+    return processed
   }
 
   private enum AESGCMOps {
@@ -179,13 +214,15 @@ public extension Source {
   ///   - algorithm: Alogorithm for box ciphering.
   ///   - operation: Operation (seal or open) to apply.
   ///   - key: Key to use for cipher.
+  ///   - boxDataSize: Size of data in each box.
   /// - Returns: Box ciphered source stream reading from this stream.
   func boxCiphered(
     algorithm: BoxCipherFilter.Algorithm,
     operation: BoxCipherFilter.Operation,
-    key: SymmetricKey
+    key: SymmetricKey,
+    boxDataSize: Int = BufferedSource.segmentSize
   ) -> Source {
-    filtered(filter: BoxCipherFilter(operation: operation, algorithm: algorithm, key: key))
+    filtered(filter: BoxCipherFilter(operation: operation, algorithm: algorithm, key: key, boxDataSize: boxDataSize))
   }
 
 }
@@ -198,13 +235,15 @@ public extension Sink {
   ///   - algorithm: Alogorithm for box ciphering.
   ///   - operation: Operation (seal or open) to apply.
   ///   - key: Key to use for cipher.
+  ///   - boxDataSize: Size of data in each box.
   /// - Returns: Box ciphered sink stream writing to this stream.
   func boxCiphered(
     algorithm: BoxCipherFilter.Algorithm,
     operation: BoxCipherFilter.Operation,
-    key: SymmetricKey
+    key: SymmetricKey,
+    boxDataSize: Int = BufferedSource.segmentSize
   ) -> Sink {
-    filtered(filter: BoxCipherFilter(operation: operation, algorithm: algorithm, key: key))
+    filtered(filter: BoxCipherFilter(operation: operation, algorithm: algorithm, key: key, boxDataSize: boxDataSize))
   }
 
 }

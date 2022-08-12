@@ -126,11 +126,13 @@ public extension Source {
 
   /// Write all remaining data from this stream to `sink`.
   ///
-  /// - Parameter sink: Destination ``Sink`` to write data.
+  /// - Parameters:
+  ///   - sink: Destination ``Sink`` to write data.
+  ///   - bufferSize: Size of buffers to use during iteration.
   /// - Throws: ``IOError`` if a read or write fails.
-  func pipe(to sink: Sink) async throws {
+  func pipe(to sink: Sink, bufferSize: Int = BufferedSource.segmentSize) async throws {
 
-    for try await data in buffers() {
+    for try await data in buffers(size: bufferSize) {
 
       try Task.checkCancellation()
 
