@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import CryptoKit
 @testable import IOStreams
 import XCTest
 
