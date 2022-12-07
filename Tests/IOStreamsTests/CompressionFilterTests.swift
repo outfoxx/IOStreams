@@ -25,10 +25,10 @@ final class CompressionFilterTests: XCTestCase {
     let data = Data(repeating: 0x5A, count: (512 * 1024) + 3333)
     let sink = DataSink()
 
-    let decompressingSink = try sink.decompressing(algorithm: .zlib)
+    let decompressingSink = try sink.decompressing(algorithm: .lzfse)
     do {
 
-      let compressingSource = try data.source().compressing(algorithm: .zlib)
+      let compressingSource = try data.source().compressing(algorithm: .lzfse)
       do {
 
         try await compressingSource.pipe(to: decompressingSink)
