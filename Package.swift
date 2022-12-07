@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -11,8 +11,6 @@ let package = Package(
       name: "IOStreams",
       targets: ["IOStreams"]),
   ],
-  dependencies: [
-  ],
   targets: [
     .target(
       name: "IOStreams",
@@ -22,3 +20,10 @@ let package = Package(
       dependencies: ["IOStreams"]),
   ]
 )
+
+#if swift(>=5.6)
+  // Add the documentation compiler plugin if possible
+  package.dependencies.append(
+    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0")
+  )
+#endif
