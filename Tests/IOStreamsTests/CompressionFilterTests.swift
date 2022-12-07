@@ -20,6 +20,9 @@ import XCTest
 final class CompressionFilterTests: XCTestCase {
 
   func testRoundTrip() async throws {
+    #if !os(macOS)
+    throw XCTSkip("Only test on macOS")
+    #endif
 
     let data = Data(repeating: 0x5A, count: (512 * 1024) + 3333)
     let sink = DataSink()
