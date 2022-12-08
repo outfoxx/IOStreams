@@ -45,10 +45,8 @@ public class URLSessionSource: Source {
       let task = session.dataTask(with: request)
       task.delegate = DataTaskDelegate(continuation: continuation)
 
-      continuation.onTermination = { termination in
-        if case .cancelled = termination {
-          task.cancel()
-        }
+      continuation.onTermination = { _ in
+        task.cancel()
       }
 
       task.resume()
@@ -60,7 +58,7 @@ public class URLSessionSource: Source {
   public func read(max: Int) async throws -> Data? {
     guard iterator != nil else { throw IOError.streamClosed }
 
-    let next = try await iterator!.next()
+    let next = try await iterator?.next()
 
     bytesRead += next?.count ?? 0
 
