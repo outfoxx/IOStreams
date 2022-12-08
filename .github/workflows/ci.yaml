@@ -4,45 +4,72 @@ on:
   push:
     branches: [ main ]
   pull_request:
+    types: [ opened, synchronize, reopened ]
     branches: [ main ]
 
 jobs:
 
-  # check:
-  #   runs-on: macos-12
+  check-build-test:
+    runs-on: macos-12
 
-  #   steps:
+    steps:
 
-  #   - uses: actions/checkout@v1
-  #   - name: SwiftLint
-  #     run: ./.github/swiftlinter      
+    - name: Install Tools
+      run: |
+        brew install xcbeautify
+        brew install sonar-scanner
+
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_13.4.app/Contents/Developer
+
+    - name: SwiftLint
+      run: |
+        mkdir .build
+        swiftlint lint --reporter json > .build/swiftlint.json
+
+    - name: Build/Test
+      run: set -o pipefail && swift test --enable-code-coverage --sanitize undefined | xcbeautify
+
+    - name: Convert Coverage
+      run: xcrun llvm-cov show -instr-profile=.build/debug/codecov/default.profdata .build/debug/IOStreamsPackageTests.xctest/Contents/MacOS/IOStreamsPackageTests > .build/coverage.report
+
+    - name: Sonar Scanner
+      run: sonar-scanner
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
 
   build-test:
   
     runs-on: macos-12
 
-    # needs: [check]
+    needs: [check-build-test]
 
     strategy:
       matrix:
-        platform: [macos, ios, tvos]
-        xcode: ["13.4.1"]
+        platform: [macos, ios, tvos, watchos]
 
     steps:
       
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Select Xcode
-      run: sudo xcode-select -s /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer
+      run: sudo xcode-select -s /Applications/Xcode_13.4.app/Contents/Developer
+
+    - name: Install Tools
+      run: brew install xcbeautify
 
     - name: Build/Test
-      run: |
-        make build-test-${{ matrix.platform }}
+      run: make build-test-${{ matrix.platform }}
 
-    - name: Updload Reports
-      uses: actions/upload-artifact@v2
+    - name: Report Test Results
+      uses: kishikawakatsumi/xcresulttool@v1
       if: always()
       with:
-        name: reports
-        path: |
-          TestResults
+          title: Test Results ${{ matrix.platform }}
+          path: ./TestResults/${{ matrix.platform }}.xcresult

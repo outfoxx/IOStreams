@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-import CryptoKit
 @testable import IOStreams
 import XCTest
 
 final class CompressionFilterTests: XCTestCase {
 
-  func testRountTrip() async throws {
+  func testRoundTrip() async throws {
+    #if !os(macOS)
+    throw XCTSkip("Only test on macOS")
+    #endif
 
     let data = Data(repeating: 0x5A, count: (512 * 1024) + 3333)
     let sink = DataSink()
 
-    let decompressingSink = try sink.decompressing(algorithm: .zlib)
+    let decompressingSink = try sink.decompressing(algorithm: .lzfse)
     do {
 
-      let compressingSource = try data.source().compressing(algorithm: .zlib)
+      let compressingSource = try data.source().compressing(algorithm: .lzfse)
       do {
 
         try await compressingSource.pipe(to: decompressingSink)

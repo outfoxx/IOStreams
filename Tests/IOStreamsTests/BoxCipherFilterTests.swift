@@ -20,7 +20,7 @@ import XCTest
 
 final class BoxCipherFilterTests: XCTestCase {
 
-  func testRountTrip() async throws {
+  func testRoundTrip() async throws {
 
     let data = Data(repeating: 0x5A, count: (512 * 1024) + 3333)
     let sink = DataSink()
