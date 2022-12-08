@@ -3,7 +3,7 @@
 ## An asynchronous Swift I/O library
 
 [![CI](https://github.com/outfoxx/IOStreams/actions/workflows/ci.yaml/badge.svg)](https://github.com/outfoxx/IOStreams/actions/workflows/ci.yaml)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/outfoxx/IOStreams)
+![Coverage](https://sonarcloud.io/api/project_badges/measure?project=outfoxx_IOStreams&metric=coverage)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Foutfoxx%2FIOStreams%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/outfoxx/IOStreams)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Foutfoxx%2FIOStreams%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/outfoxx/IOStreams)
 
@@ -25,7 +25,7 @@ To use IOStreams in your project, add the following dependency to its `package.s
 
 IOStreams has documentation to get you started using the library as well as complete reference documentation.
 
-[Package Documentation](https://outfoxx.github.io/IOStreams/documentation/iostreams/)
+[Package Documentation](https://outfoxx.github.io/IOStreams/main/documentation/iostreams/)
   
 License
 --------
