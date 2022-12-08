@@ -52,7 +52,7 @@ public class FileSource: FileStream, Source {
 
         var collectedData = Data()
 
-        io.read(offset: 0, length: max, queue: .taskPriority) { done, data, error in
+        dispatchIO.read(offset: 0, length: max, queue: .taskPriority) { done, data, error in
 
           if task?.isCancelled ?? false {
             continuation.resume(throwing: CancellationError())
@@ -134,7 +134,7 @@ public class FileSink: FileStream, Sink {
 
           let data = DispatchData(bytes: dataPtr)
 
-          io.write(offset: 0, data: data, queue: .taskPriority) { done, _, error in
+          dispatchIO.write(offset: 0, data: data, queue: .taskPriority) { done, _, error in
 
             if task?.isCancelled ?? false {
               continuation.resume(throwing: CancellationError())
@@ -185,7 +185,7 @@ public class FileStream: Stream {
   }
 
   fileprivate let fileHandle: FileHandle
-  fileprivate var io: DispatchIO!
+  fileprivate var dispatchIO: DispatchIO!
   fileprivate var closedState = CloseState()
 
   /// Initialize the stream from a file handle.
@@ -195,7 +195,7 @@ public class FileStream: Stream {
   public required init(fileHandle: FileHandle) throws {
 
     self.fileHandle = fileHandle
-    io = DispatchIO(type: .stream, fileDescriptor: fileHandle.fileDescriptor, queue: .taskPriority) { error in
+    dispatchIO = DispatchIO(type: .stream, fileDescriptor: fileHandle.fileDescriptor, queue: .taskPriority) { error in
       let closeError: Error?
       if error != 0 {
 
@@ -211,16 +211,16 @@ public class FileStream: Stream {
     }
 
     // Ensure handlers are called frequently to allow timely cancellation
-    io.setLimit(lowWater: Self.progressReportLimits.lowWaterMark)
-    io.setLimit(highWater: Self.progressReportLimits.highWaterMark)
-    io.setInterval(interval: Self.progressReportLimits.maxInterval, flags: [])
+    dispatchIO.setLimit(lowWater: Self.progressReportLimits.lowWaterMark)
+    dispatchIO.setLimit(highWater: Self.progressReportLimits.highWaterMark)
+    dispatchIO.setInterval(interval: Self.progressReportLimits.maxInterval, flags: [])
   }
 
   fileprivate func close(error: Error?) {
     guard !closedState.closed else { return }
     closedState.closed = true
     closedState.error = error
-    io.close(flags: [.stop])
+    dispatchIO.close(flags: [.stop])
   }
 
   public func close() throws {
