@@ -42,7 +42,9 @@ final class FileStreamsTests: XCTestCase {
 
     let source = try FileSource(fileHandle: fileHandle)
 
-    for try await _ in source.buffers() {}
+    for try await _ in source.buffers() {
+      // read all buffers to test bytesRead
+    }
 
     XCTAssertEqual(source.bytesRead, fileSize)
   }
@@ -82,7 +84,9 @@ final class FileStreamsTests: XCTestCase {
     let source = try FileSource(fileHandle: fileHandle)
 
     let reader = Task {
-      for try await _ in source.buffers(size: 133) {}
+      for try await _ in source.buffers(size: 133) {
+        // read all buffers to test bytesRead
+      }
     }
 
     try await Task.sleep(nanoseconds: 5_000_000)

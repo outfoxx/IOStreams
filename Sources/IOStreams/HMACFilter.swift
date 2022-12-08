@@ -114,7 +114,7 @@ public extension Sink {
 
 
 private protocol AnyHMAC {
-  mutating func update<D : DataProtocol>(data: D)
+  mutating func update<D: DataProtocol>(data: D)
   func finalizeData() -> Data
 }
 
