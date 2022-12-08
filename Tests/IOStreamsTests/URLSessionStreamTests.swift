@@ -55,9 +55,8 @@ final class URLSessionStreamsTests: XCTestCase {
     let source = URL(string: "https://github.com")!.source()
 
     let task = Task {
-      for try await buffer in source.buffers(size: 1024) {
+      for try await _ in source.buffers(size: 1024) {
         withUnsafeCurrentTask { $0?.cancel() }
-        print("### Received \(buffer.count) bytes")
       }
     }
     try await task.value
