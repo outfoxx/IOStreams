@@ -19,9 +19,16 @@ import Foundation
 @available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
 public class URLSessionSource: Source {
 
-  public enum HTTPError: Error {
+  public enum HTTPError: Error, LocalizedError {
     case invalidResponse
     case invalidStatus
+
+    public var errorDescription: String? {
+      switch self {
+      case .invalidResponse: return "Invalid Response"
+      case .invalidStatus: return "Invalid Status"
+      }
+    }
   }
 
   public typealias Stream = AsyncThrowingStream<Data, Error>
@@ -78,7 +85,7 @@ public class URLSessionSource: Source {
     }
 
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-      continuation.finish(throwing: error.map { IOError.causedBy($0) })
+      continuation.finish(throwing: error)
     }
 
     public func urlSession(
@@ -89,13 +96,13 @@ public class URLSessionSource: Source {
     ) {
 
       guard let httpResponse = response as? HTTPURLResponse else {
-        continuation.finish(throwing: IOError.causedBy(HTTPError.invalidResponse))
+        continuation.finish(throwing: HTTPError.invalidResponse)
         completionHandler(.cancel)
         return
       }
 
-      if 400 ..< 600 ~= httpResponse.statusCode {
-        continuation.finish(throwing: IOError.causedBy(HTTPError.invalidStatus))
+      if 300 ..< 600 ~= httpResponse.statusCode {
+        continuation.finish(throwing: HTTPError.invalidStatus)
         completionHandler(.cancel)
         return
       }

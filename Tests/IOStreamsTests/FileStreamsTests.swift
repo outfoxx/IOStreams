@@ -101,4 +101,42 @@ final class FileStreamsTests: XCTestCase {
     XCTAssert(source.bytesRead < fileSize, "Source should have cancelled iteration")
   }
 
+  func testInvalidFileSourceThrows() async throws {
+
+    do {
+
+      _ = try FileSource(path: "/non-esixtent-file")
+
+    }
+    catch let error as CocoaError {
+
+      XCTAssertEqual(error.code, .fileReadNoSuchFile)
+
+    }
+    catch {
+
+      XCTFail("Incorrect exception caught")
+    }
+
+  }
+
+  func testInvalidFileSinkThrows() async throws {
+
+    do {
+
+      _ = try FileSink(path: "/non-esixtent-file")
+
+    }
+    catch let error as CocoaError {
+
+      XCTAssertEqual(error.code, .fileNoSuchFile)
+
+    }
+    catch {
+
+      XCTFail("Incorrect exception caught")
+    }
+
+  }
+
 }
