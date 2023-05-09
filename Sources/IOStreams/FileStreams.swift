@@ -39,7 +39,7 @@ public class FileSource: FileStream, Source {
   ///
   public convenience init(path: String) throws {
     guard let fileHandle = FileHandle(forReadingAtPath: path) else {
-      throw IOError.noSuchFile
+      throw CocoaError(.fileReadNoSuchFile)
     }
     try self.init(fileHandle: fileHandle)
   }
@@ -118,7 +118,7 @@ public class FileSink: FileStream, Sink {
   ///
   public convenience init(path: String) throws {
     guard let fileHandle = FileHandle(forWritingAtPath: path) else {
-      throw IOError.noSuchFile
+      throw CocoaError(.fileNoSuchFile)
     }
     try self.init(fileHandle: fileHandle)
   }
@@ -199,9 +199,7 @@ public class FileStream: Stream {
       let closeError: Error?
       if error != 0 {
 
-        let errorCode = POSIXError.Code(rawValue: error) ?? .EIO
-
-        closeError = IOError.map(error: POSIXError(errorCode))
+        closeError = POSIXError(POSIXErrorCode(rawValue: error) ?? .EIO)
       }
       else {
         closeError = nil
