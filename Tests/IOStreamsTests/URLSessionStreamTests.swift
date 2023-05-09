@@ -65,4 +65,22 @@ final class URLSessionStreamsTests: XCTestCase {
     XCTAssert(source.bytesRead < 50 * 1024, "Source should have cancelled iteration")
   }
 
+  func testSourceThrowsInvalidStatus() async throws {
+
+    do {
+
+      _ = try await URLSessionSource(url: URL(string: "http://example.com/non-existent-url")!).read(max: .max)
+
+    }
+    catch let error as URLSessionSource.HTTPError {
+
+      XCTAssertEqual(error, .invalidStatus)
+
+    }
+    catch {
+
+      XCTFail("Unexpected error thrown")
+    }
+
+  }
 }

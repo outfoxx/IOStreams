@@ -33,7 +33,7 @@ public enum IOError: Error, LocalizedError {
     switch self {
     case .endOfStream: return "End of Stream"
     case .streamClosed: return "Stream Closed"
-    case .filterFailure(let error): return "Filter Failed: \(error)"
+    case .filterFailure(let error): return "Filter Failed: \(error.localizedDescription)"
     }
   }
 
