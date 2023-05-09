@@ -45,7 +45,7 @@ public class FileSource: FileStream, Source {
   }
 
   public func read(max: Int) async throws -> Data? {
-    guard !closedState.closed else { throw IOError.streamClosed }
+    guard let dispatchIO = dispatchIO, !closedState.closed else { throw IOError.streamClosed }
 
     let data: Data? = try await withCheckedThrowingContinuation { continuation in
       withUnsafeCurrentTask { task in
@@ -124,7 +124,7 @@ public class FileSink: FileStream, Sink {
   }
 
   public func write(data: Data) async throws {
-    guard !closedState.closed else { throw IOError.streamClosed }
+    guard let dispatchIO = dispatchIO, !closedState.closed else { throw IOError.streamClosed }
 
     try await withCheckedThrowingContinuation { continuation in
 
@@ -185,7 +185,7 @@ public class FileStream: Stream {
   }
 
   fileprivate let fileHandle: FileHandle
-  fileprivate var dispatchIO: DispatchIO!
+  fileprivate var dispatchIO: DispatchIO?
   fileprivate var closedState = CloseState()
 
   /// Initialize the stream from a file handle.
@@ -195,7 +195,9 @@ public class FileStream: Stream {
   public required init(fileHandle: FileHandle) throws {
 
     self.fileHandle = fileHandle
-    dispatchIO = DispatchIO(type: .stream, fileDescriptor: fileHandle.fileDescriptor, queue: .taskPriority) { error in
+
+    let dispatchIO =
+    DispatchIO(type: .stream, fileDescriptor: fileHandle.fileDescriptor, queue: .taskPriority) { error in
       let closeError: Error?
       if error != 0 {
 
@@ -212,13 +214,16 @@ public class FileStream: Stream {
     dispatchIO.setLimit(lowWater: Self.progressReportLimits.lowWaterMark)
     dispatchIO.setLimit(highWater: Self.progressReportLimits.highWaterMark)
     dispatchIO.setInterval(interval: Self.progressReportLimits.maxInterval, flags: [])
+
+    self.dispatchIO = dispatchIO
   }
 
   fileprivate func close(error: Error?) {
     guard !closedState.closed else { return }
     closedState.closed = true
     closedState.error = error
-    dispatchIO.close(flags: [.stop])
+    dispatchIO?.close(flags: [.stop])
+    dispatchIO = nil
   }
 
   public func close() throws {
