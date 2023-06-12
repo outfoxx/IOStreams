@@ -52,8 +52,17 @@ public class BoxCipherFilter: Filter {
 
   /// Additional authentication data added to each box.
   private struct AAD {
-    public let index: UInt64
-    public let isFinal: Bool
+    let index: UInt64
+    let isFinal: Bool
+
+    func serialized() -> Data {
+      var data = Data()
+      withUnsafeBytes(of: index.bigEndian) { ptr in
+        data.append(ptr.baseAddress.unsafelyUnwrapped.assumingMemoryBound(to: UInt8.self), count: ptr.count)
+      }
+      data.append(isFinal ? 1 : 0)
+      return data
+    }
   }
 
   /// Size of the random nonce prepended to each box data.
@@ -168,9 +177,7 @@ public class BoxCipherFilter: Filter {
 
     fileprivate static func seal(data: Data, aad: AAD, key: SymmetricKey) throws -> Data {
 
-      let aad = withUnsafeBytes(of: aad) { Data($0) }
-
-      guard let sealedData = try AES.GCM.seal(data, using: key, authenticating: aad).combined else {
+      guard let sealedData = try AES.GCM.seal(data, using: key, authenticating: aad.serialized()).combined else {
         fatalError()
       }
 
@@ -179,9 +186,7 @@ public class BoxCipherFilter: Filter {
 
     fileprivate static func open(data: Data, aad: AAD, key: SymmetricKey) throws -> Data {
 
-      let aad = withUnsafeBytes(of: aad) { Data($0) }
-
-      return try AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key, authenticating: aad)
+      return try AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key, authenticating: aad.serialized())
     }
 
   }
@@ -190,16 +195,12 @@ public class BoxCipherFilter: Filter {
 
     fileprivate static func seal(data: Data, aad: AAD, key: SymmetricKey) throws -> Data {
 
-      let aad = withUnsafeBytes(of: aad) { Data($0) }
-
-      return try ChaChaPoly.seal(data, using: key, authenticating: aad).combined
+      return try ChaChaPoly.seal(data, using: key, authenticating: aad.serialized()).combined
     }
 
     fileprivate static func open(data: Data, aad: AAD, key: SymmetricKey) throws -> Data {
 
-      let aad = withUnsafeBytes(of: aad) { Data($0) }
-
-      return try ChaChaPoly.open(ChaChaPoly.SealedBox(combined: data), using: key, authenticating: aad)
+      return try ChaChaPoly.open(ChaChaPoly.SealedBox(combined: data), using: key, authenticating: aad.serialized())
     }
 
   }
