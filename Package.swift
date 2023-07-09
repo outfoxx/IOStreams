@@ -11,10 +11,15 @@ let package = Package(
       name: "IOStreams",
       targets: ["IOStreams"]),
   ],
+  dependencies: [
+    .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMinor(from: "1.1.0"))
+  ],
   targets: [
     .target(
       name: "IOStreams",
-      dependencies: []),
+      dependencies: [
+        .product(name: "Atomics", package: "swift-atomics")
+      ]),
     .testTarget(
       name: "IOStreamsTests",
       dependencies: ["IOStreams"]),

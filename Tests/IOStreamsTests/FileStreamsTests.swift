@@ -39,8 +39,9 @@ final class FileStreamsTests: XCTestCase {
     let fileHandle = try FileHandle(forUpdating: fileURL)
     try fileHandle.truncate(atOffset: UInt64(fileSize))
     try fileHandle.seek(toOffset: 0)
+    try fileHandle.close()
 
-    let source = try FileSource(fileHandle: fileHandle)
+    let source = try FileSource(url: fileURL)
 
     for try await _ in source.buffers() {
       // read all buffers to test bytesRead
@@ -55,12 +56,12 @@ final class FileStreamsTests: XCTestCase {
     let fileHandle = try FileHandle(forUpdating: fileURL)
     try fileHandle.truncate(atOffset: UInt64(fileSize))
     try fileHandle.seek(toOffset: 0)
+    try fileHandle.close()
 
     let source = try FileSource(url: fileURL)
 
     let reader = Task {
-      for try await data in source.buffers(size: 3079) {
-        _ = data.count
+      for try await _ /* data */ in source.buffers(size: 3079) {
         // print("Read \(data.count) bytes of data")
       }
     }
@@ -80,12 +81,105 @@ final class FileStreamsTests: XCTestCase {
     let fileHandle = try FileHandle(forUpdating: fileURL)
     try fileHandle.truncate(atOffset: UInt64(fileSize))
     try fileHandle.seek(toOffset: 0)
+    try fileHandle.close()
 
-    let source = try FileSource(fileHandle: fileHandle)
+    let source = try FileSource(url: fileURL)
 
     let reader = Task {
       for try await _ in source.buffers(size: 133) {
-        // read all buffers to test bytesRead
+        withUnsafeCurrentTask { $0!.cancel() }
+      }
+    }
+
+    do {
+      try await reader.value
+      XCTFail("Expected cancellation error")
+    }
+    catch is CancellationError {
+      // expected
+    }
+    catch {
+      XCTFail("Unexpected error thrown: \(error.localizedDescription)")
+    }
+
+    XCTAssert(source.bytesRead > 0, "Data should have been read from source")
+    XCTAssert(source.bytesRead < fileSize, "Source should have cancelled iteration")
+  }
+
+  func testSourceContinuesAfterCancel() async throws {
+
+    let fileSize = 256 * 1024
+    let fileHandle = try FileHandle(forUpdating: fileURL)
+    try fileHandle.truncate(atOffset: UInt64(fileSize))
+    try fileHandle.seek(toOffset: 0)
+    try fileHandle.close()
+
+    let source = try FileSource(url: fileURL)
+
+    let reader = Task {
+      for try await _ /* data */ in source.buffers(size: 3079) {
+        // print("Read \(data.count) bytes of data")
+      }
+    }
+
+    do {
+      reader.cancel()
+      try await reader.value
+      XCTFail("Expected cancellation error")
+    }
+    catch is CancellationError {
+      // expected
+    }
+    catch {
+      XCTFail("Unexpected error thrown: \(error.localizedDescription)")
+    }
+
+    XCTAssertEqual(source.bytesRead, 0)
+
+    do {
+      _ = try await source.read(exactly: 1000)
+    }
+    catch {
+      XCTFail("Unexpected error thrown: \(error.localizedDescription)")
+    }
+
+    XCTAssertEqual(source.bytesRead, 1000)
+  }
+
+  func testSinkCancels() async throws {
+
+    let source = DataSource(data: Data(count: 1024 * 1024))
+    let sink = try FileSink(url: fileURL)
+
+    let reader = Task {
+      for try await buffer in source.buffers() {
+        try await sink.write(data: buffer)
+      }
+    }
+
+    do {
+      reader.cancel()
+      try await reader.value
+      XCTFail("Expected cancellation error")
+    }
+    catch is CancellationError {
+      // expected
+    }
+    catch {
+      XCTFail("Unexpected error thrown: \(error.localizedDescription)")
+    }
+
+    XCTAssertEqual(sink.bytesWritten, 0)
+  }
+
+  func testSinkCancelsAfterStart() async throws {
+
+    let source = DataSource(data: Data(count: 1024 * 1024))
+    let sink = try FileSink(url: fileURL)
+
+    let reader = Task {
+      for try await buffer in source.buffers(size: 113) {
+        try await sink.write(data: buffer)
       }
     }
 
@@ -94,11 +188,51 @@ final class FileStreamsTests: XCTestCase {
     do {
       reader.cancel()
       try await reader.value
+      XCTFail("Expected cancellation error")
     }
-    catch is CancellationError {}
+    catch is CancellationError {
+      // expected
+    }
+    catch {
+      XCTFail("Unexpected error thrown: \(error.localizedDescription)")
+    }
 
-    XCTAssert(source.bytesRead > 0, "Data should have been read from source")
-    XCTAssert(source.bytesRead < fileSize, "Source should have cancelled iteration")
+    XCTAssert(sink.bytesWritten > 0, "Data should have been written to sink")
+    XCTAssert(sink.bytesWritten < source.data.count, "Sink should have cancelled iteration")
+  }
+
+  func testSinkContinuesAfterCancel() async throws {
+
+    let source = DataSource(data: Data(count: 1024 * 1024))
+    let sink = try FileSink(url: fileURL)
+
+    let reader = Task {
+      for try await buffer in source.buffers(size: 100) {
+        try await sink.write(data: buffer)
+      }
+    }
+
+    do {
+      reader.cancel()
+      try await reader.value
+      XCTFail("Expected cancellation error")
+    }
+    catch is CancellationError {
+      // expected
+    }
+    catch {
+      XCTFail("Unexpected error thrown: \(error.localizedDescription)")
+    }
+
+    XCTAssertEqual(sink.bytesWritten, 0)
+    XCTAssertEqual(try fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize, 0)
+
+    try await sink.write(data: Data(count: 1000))
+    try sink.close()
+
+    XCTAssertEqual(sink.bytesWritten, 1000)
+    fileURL.removeAllCachedResourceValues()
+    XCTAssertEqual(try fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize, 1000)
   }
 
   func testInvalidFileSourceThrows() async throws {
