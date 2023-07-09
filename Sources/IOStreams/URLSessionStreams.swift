@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import Atomics
 import Foundation
 
 @available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
@@ -36,6 +37,7 @@ public class URLSessionSource: Source {
   public private(set) var bytesRead = 0
 
   private var iterator: Stream.AsyncIterator?
+  private var availableData: Data? = Data()
 
   public convenience init(url: URL, session: URLSession = .shared) {
     self.init(request: URLRequest(url: url), session: session)
@@ -65,9 +67,32 @@ public class URLSessionSource: Source {
   public func read(max: Int) async throws -> Data? {
     guard iterator != nil else { throw IOError.streamClosed }
 
-    let next = try await iterator?.next()
+    guard let availableData = availableData else {
 
-    bytesRead += next?.count ?? 0
+      // iterator done, we're done
+
+      return nil
+    }
+
+    // Honor cancellation before any work
+    try Task.checkCancellation()
+
+    guard !availableData.isEmpty else {
+
+      // no data to return, grab some more and try again
+
+      self.availableData = try await iterator?.next()
+
+      return try await read(max: max)
+    }
+
+    // Since we cannot control how much data the URL session task provides
+    // in a single callback, we ensure this function honors the `max` parameter.
+
+    let next = availableData.prefix(max)
+    self.availableData = availableData.dropFirst(next.count)
+
+    bytesRead += next.count
 
     return next
   }
@@ -78,14 +103,35 @@ public class URLSessionSource: Source {
 
   private final class DataTaskDelegate: NSObject, URLSessionDataDelegate {
 
-    let continuation: Stream.Continuation
+    var continuation: Stream.Continuation?
 
     init(continuation: Stream.Continuation) {
       self.continuation = continuation
     }
 
+    func finish(throwing error: Error? = nil) {
+      self.continuation?.finish(throwing: error)
+      self.continuation = nil
+    }
+
+    func checkCancel(task: URLSessionTask) -> Bool {
+      if task.state == .canceling {
+        finish(throwing: CancellationError())
+        return false
+      }
+      return true
+    }
+
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-      continuation.finish(throwing: error)
+      var error = error
+
+      // URLSessionTask is hidden so canceellation comes
+      // from Task cancellation so we normalize errors.
+      if let urlError = error as? URLError, urlError.code == .cancelled {
+        error = CancellationError()
+      }
+
+      finish(throwing: error)
     }
 
     public func urlSession(
@@ -94,15 +140,13 @@ public class URLSessionSource: Source {
       didReceive response: URLResponse,
       completionHandler: @escaping (URLSession.ResponseDisposition) -> Void
     ) {
-
-      guard let httpResponse = response as? HTTPURLResponse else {
-        continuation.finish(throwing: HTTPError.invalidResponse)
+      guard checkCancel(task: dataTask) else {
         completionHandler(.cancel)
         return
       }
 
-      if 300 ..< 600 ~= httpResponse.statusCode {
-        continuation.finish(throwing: HTTPError.invalidStatus)
+      if let httpResponse = response as? HTTPURLResponse, 400 ..< 600 ~= httpResponse.statusCode {
+        finish(throwing: HTTPError.invalidStatus)
         completionHandler(.cancel)
         return
       }
@@ -111,7 +155,12 @@ public class URLSessionSource: Source {
     }
 
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-      continuation.yield(data)
+      guard checkCancel(task: dataTask), let continuation = continuation else {
+        return
+      }
+
+      // BUG: Must manually copy data or suffer random crash working with data later
+      continuation.yield(Data(data))
     }
 
   }

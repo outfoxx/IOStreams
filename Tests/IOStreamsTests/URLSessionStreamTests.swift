@@ -24,8 +24,8 @@ final class URLSessionStreamsTests: XCTestCase {
 
     let source = URL(string: "https://github.com")!.source()
 
-    for try await buffer in source.buffers() {
-      print("### Received \(buffer.count) bytes")
+    for try await _ /* data */ in source.buffers() {
+      // print("### Received \(buffer.count) bytes")
     }
 
     XCTAssertGreaterThan(source.bytesRead, 50 * 1024)
@@ -36,16 +36,22 @@ final class URLSessionStreamsTests: XCTestCase {
     let source = URL(string: "https://github.com")!.source()
 
     let reader = Task {
-      for try await buffer in source.buffers(size: 3079) {
-        print("### Received \(buffer.count) bytes")
+      for try await _ /* data */ in source.buffers(size: 3079) {
+        // print("### Received \(buffer.count) bytes")
       }
     }
 
     do {
       reader.cancel()
       try await reader.value
+      XCTFail("Expected cancellation error")
     }
-    catch is CancellationError {}
+    catch is CancellationError {
+      // expected
+    }
+    catch {
+      XCTFail("Unexpected error thrown: \(error.localizedDescription)")
+    }
 
     XCTAssertEqual(source.bytesRead, 0)
   }
@@ -54,12 +60,22 @@ final class URLSessionStreamsTests: XCTestCase {
 
     let source = URL(string: "https://github.com")!.source()
 
-    let task = Task {
-      for try await _ in source.buffers(size: 1024) {
-        withUnsafeCurrentTask { $0?.cancel() }
+    let reader = Task {
+      for try await _ in source.buffers(size: 133) {
+        withUnsafeCurrentTask { $0!.cancel() }
       }
     }
-    try await task.value
+
+    do {
+      try await reader.value
+      XCTFail("Expected cancellation error")
+    }
+    catch is CancellationError {
+      // expected
+    }
+    catch {
+      XCTFail("Unexpected error thrown: \(error.localizedDescription)")
+    }
 
     XCTAssert(source.bytesRead > 0, "Data should have been read from source")
     XCTAssert(source.bytesRead < 50 * 1024, "Source should have cancelled iteration")
