@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import Atomics
 import Darwin
 import Foundation
 
@@ -47,52 +48,45 @@ public class FileSource: FileStream, Source {
   public func read(max: Int) async throws -> Data? {
     guard let dispatchIO = dispatchIO, !closedState.closed else { throw IOError.streamClosed }
 
-    let data: Data? = try await withCheckedThrowingContinuation { continuation in
-      withUnsafeCurrentTask { task in
+    let data: Data? = try await withTaskCancellationHandler {
+
+      try await withCheckedThrowingContinuation { continuation in
 
         var collectedData = Data()
 
         dispatchIO.read(offset: 0, length: max, queue: .taskPriority) { done, data, error in
 
-          if task?.isCancelled ?? false {
-            continuation.resume(throwing: CancellationError())
-            return
+          if error == ECANCELED {
+
+            return continuation.resume(throwing: CancellationError())
+          }
+
+          if let data = data, !data.isEmpty {
+
+            collectedData.append(Data(data))
           }
 
           if error != 0 {
 
-            let errorCode = POSIXError.Code(rawValue: error) ?? .EIO
-
-            continuation.resume(throwing: POSIXError(errorCode))
-          }
-          else if let data = data, !data.isEmpty {
-
-            collectedData.append(Data(data))
-
-            if done {
-              continuation.resume(returning: collectedData)
-            }
+            return continuation.resume(throwing: POSIXError(POSIXError.Code(rawValue: error) ?? .EIO))
           }
           else if done {
-            // error is 0, data is empty, and done is true.. flags EOF
 
-            if collectedData.isEmpty {
-              // Signal EOF to caller
-              continuation.resume(returning: nil)
-            }
-            else {
-              // Return the collected data... EOF will be signaled on next read
-              continuation.resume(returning: collectedData)
-            }
+            return continuation.resume(returning: collectedData.isEmpty ? nil : collectedData)
           }
         }
+
       }
+
+    } onCancel: {
+      cancel()
     }
 
     bytesRead += data?.count ?? 0
 
     return data
   }
+
 }
 
 
@@ -126,9 +120,9 @@ public class FileSink: FileStream, Sink {
   public func write(data: Data) async throws {
     guard let dispatchIO = dispatchIO, !closedState.closed else { throw IOError.streamClosed }
 
-    try await withCheckedThrowingContinuation { continuation in
+    try await withTaskCancellationHandler {
 
-      withUnsafeCurrentTask { task in
+      try await withCheckedThrowingContinuation { continuation in
 
         data.withUnsafeBytes { dataPtr in
 
@@ -136,7 +130,7 @@ public class FileSink: FileStream, Sink {
 
           dispatchIO.write(offset: 0, data: data, queue: .taskPriority) { done, _, error in
 
-            if task?.isCancelled ?? false {
+            if error == ECANCELED {
               continuation.resume(throwing: CancellationError())
               return
             }
@@ -147,9 +141,7 @@ public class FileSink: FileStream, Sink {
 
             if error != 0 {
 
-              let errorCode = POSIXError.Code(rawValue: error) ?? .EIO
-
-              continuation.resume(throwing: POSIXError(errorCode))
+              continuation.resume(throwing: POSIXError(POSIXError.Code(rawValue: error) ?? .EIO))
             }
             else {
               continuation.resume()
@@ -157,9 +149,11 @@ public class FileSink: FileStream, Sink {
           }
 
         }
+      } as Void
 
-      }
-    } as Void
+    } onCancel: {
+      cancel()
+    }
 
     bytesWritten += Int(data.count)
   }
@@ -195,6 +189,19 @@ public class FileStream: Stream {
   public required init(fileHandle: FileHandle) throws {
 
     self.fileHandle = fileHandle
+
+    reset()
+  }
+
+  fileprivate func cancel() {
+    // Cancel current dispatches
+    dispatchIO?.close(flags: .stop)
+    dispatchIO = nil
+
+    reset()
+  }
+
+  fileprivate func reset() {
 
     let dispatchIO =
     DispatchIO(type: .stream, fileDescriptor: fileHandle.fileDescriptor, queue: .taskPriority) { error in
